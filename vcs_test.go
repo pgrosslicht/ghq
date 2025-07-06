@@ -433,6 +433,34 @@ func TestVCSBackend(t *testing.T) {
 		},
 		expect: []string{"fossil", "update"},
 		dir:    localDir,
+	}, {
+		name: "[jj] clone",
+		f: func() error {
+			return JujutsuBackend.Clone(&vcsGetOption{
+				url: remoteDummyURL,
+				dir: localDir,
+			})
+		},
+		expect: []string{"jj", "git", "clone", remoteDummyURL.String(), localDir},
+	}, {
+		name: "[jj] clone with remote",
+		f: func() error {
+			return JujutsuBackend.Clone(&vcsGetOption{
+				url:    remoteDummyURL,
+				dir:    localDir,
+				branch: "develop",
+			})
+		},
+		expect: []string{"jj", "git", "clone", "--remote", "develop", remoteDummyURL.String(), localDir},
+	}, {
+		name: "[jj] update",
+		f: func() error {
+			return JujutsuBackend.Update(&vcsGetOption{
+				dir: localDir,
+			})
+		},
+		expect: []string{"jj", "git", "fetch"},
+		dir:    localDir,
 	}}
 
 	for _, tc := range testCases {

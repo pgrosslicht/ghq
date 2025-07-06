@@ -398,6 +398,32 @@ var BazaarBackend = &VCSBackend{
 	Contents: []string{".bzr"},
 }
 
+// JujutsuBackend is the VCSBackend for jujutsu
+var JujutsuBackend = &VCSBackend{
+	Clone: func(vg *vcsGetOption) error {
+		dir, _ := filepath.Split(vg.dir)
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return err
+		}
+
+		args := []string{"git", "clone"}
+		if vg.branch != "" {
+			args = append(args, "--remote", vg.branch)
+		}
+		args = append(args, vg.url.String(), vg.dir)
+
+		return run(vg.silent)("jj", args...)
+	},
+	Update: func(vg *vcsGetOption) error {
+		return runInDir(vg.silent)(vg.dir, "jj", "git", "fetch")
+	},
+	Init: func(dir string) error {
+		return cmdutil.RunInDir(dir, "jj", "git", "init")
+	},
+	Contents: []string{".jj"},
+}
+
 var vcsRegistry = map[string]*VCSBackend{
 	"git":        GitBackend,
 	"github":     GitBackend,
@@ -412,4 +438,6 @@ var vcsRegistry = map[string]*VCSBackend{
 	"fossil":     FossilBackend,
 	"bzr":        BazaarBackend,
 	"bazaar":     BazaarBackend,
+	"jj":         JujutsuBackend,
+	"jujutsu":    JujutsuBackend,
 }
